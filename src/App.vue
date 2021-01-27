@@ -6,7 +6,7 @@
         <el-row>
           <el-col :xs="8" :sm="11" :md="14" :lg="17" :xl="19">
             <el-menu
-              :default-active="'myFund'"
+              :default-active="'MyFund'"
               class="el-menu-demo"
               mode="horizontal"
               @select="changeMainComponent"
@@ -33,7 +33,7 @@
                   <el-menu-item index="StockFund" v-on:click="changeMainComponent">股票基金</el-menu-item>
                 </el-submenu>
               </el-submenu>
-              <el-menu-item index="myFund" >自选基金</el-menu-item>
+              <el-menu-item index="MyFund" >自选基金</el-menu-item>
             </el-menu>
           </el-col>
           
@@ -84,12 +84,12 @@ export default {
     'ValuationRanking':() => import('./components/ValuationRanking.vue'),
     'DebateFund':() => import('./components/DebateFund.vue'),
     'StockFund':() => import('./components/StockFund.vue'),
-    'myFund': () => import('./components/MyFund.vue')
+    'MyFund': () => import('./components/MyFund.vue')
   },
   data() {
     return {
       inputSearchFund: '',
-      MainComponent: 'myFund'
+      MainComponent: 'MyFund'
     }
   },
   methods:{
