@@ -6,34 +6,34 @@
         <el-row>
           <el-col :xs="8" :sm="11" :md="14" :lg="17" :xl="19">
             <el-menu
-              :default-active="activeIndex2"
+              :default-active="'myFund'"
               class="el-menu-demo"
               mode="horizontal"
-              @select="handleSelect"
+              @select="changeMainComponent"
               background-color="#545c64"
               text-color="#fff"
               active-text-color="#ffd04b">
               <el-submenu index="1">
                 <template slot="title">我的基金</template>
-                <el-menu-item index="1-1" v-on:click="changeMainComponent">持仓信息</el-menu-item>
-                <el-menu-item index="1-2" v-on:click="changeMainComponent">收益明细</el-menu-item>
-                <el-menu-item index="1-3" v-on:click="changeMainComponent">交易记录</el-menu-item>
+                <el-menu-item index="PosInfo" v-on:click="changeMainComponent">持仓信息</el-menu-item>
+                <el-menu-item index="IncomeBreakdown" v-on:click="changeMainComponent">收益明细</el-menu-item>
+                <el-menu-item index="TransactionRecord" v-on:click="changeMainComponent">交易记录</el-menu-item>
               </el-submenu>
               <el-submenu index="2">
                 <template slot="title">基金市场</template>
-                <el-menu-item index="2-1" v-on:click="changeMainComponent">新发基金</el-menu-item>
+                <el-menu-item index="LatestFund" v-on:click="changeMainComponent">新发基金</el-menu-item>
                 <el-submenu index="2-2">
                   <template slot="title">基金排行</template>
-                  <el-menu-item index="2-2-1" v-on:click="changeMainComponent">业绩排行</el-menu-item>
-                  <el-menu-item index="2-2-2" v-on:click="changeMainComponent">估值排行</el-menu-item>
+                  <el-menu-item index="PerformanceRanking" v-on:click="changeMainComponent">业绩排行</el-menu-item>
+                  <el-menu-item index="ValuationRanking" v-on:click="changeMainComponent">估值排行</el-menu-item>
                 </el-submenu>
                 <el-submenu index="2-3">
                   <template slot="title">基金推荐</template>
-                  <el-menu-item index="2-3-1" v-on:click="changeMainComponent">稳健债基</el-menu-item>
-                  <el-menu-item index="2-3-2" v-on:click="changeMainComponent">股票基金</el-menu-item>
+                  <el-menu-item index="DebateFund" v-on:click="changeMainComponent">稳健债基</el-menu-item>
+                  <el-menu-item index="StockFund" v-on:click="changeMainComponent">股票基金</el-menu-item>
                 </el-submenu>
               </el-submenu>
-              <el-menu-item index="3" v-on:click="changeMainComponent">自选基金</el-menu-item>
+              <el-menu-item index="myFund" >自选基金</el-menu-item>
             </el-menu>
           </el-col>
           
@@ -76,32 +76,27 @@
 export default {
   name: "App",
   components: {
-    '1-1':() => import('./components/PosInfo.vue'),
-    '1-2':() => import('./components/IncomeBreakdown.vue'),
-    '1-3':() => import('./components/TransactionRecord.vue'),
-    '2-1':() => import('./components/LatestFund.vue'),
-    '2-2-1':() => import('./components/PerformanceRanking.vue'),
-    '2-2-2':() => import('./components/ValuationRanking.vue'),
-    '2-3-1':() => import('./components/DebateFund.vue'),
-    '2-3-2':() => import('./components/StockFund.vue'),
-    '3': () => import('./components/MyFund.vue')
+    'PosInfo':() => import('./components/PosInfo.vue'),
+    'IncomeBreakdown':() => import('./components/IncomeBreakdown.vue'),
+    'TransactionRecord':() => import('./components/TransactionRecord.vue'),
+    'LatestFund':() => import('./components/LatestFund.vue'),
+    'PerformanceRanking':() => import('./components/PerformanceRanking.vue'),
+    'ValuationRanking':() => import('./components/ValuationRanking.vue'),
+    'DebateFund':() => import('./components/DebateFund.vue'),
+    'StockFund':() => import('./components/StockFund.vue'),
+    'myFund': () => import('./components/MyFund.vue')
   },
   data() {
     return {
       inputSearchFund: '',
-      MainComponent: '3'
+      MainComponent: 'myFund'
     }
   },
   methods:{
-    changeMainComponent:function (event) {
-      this.MainComponent=event._props.index;
+    changeMainComponent:function (index) {
+      this.MainComponent=index;
     }
   }
-  // computed:{
-  //   "": function() {
-  //     return "MyFund";
-  //   }
-  // }
 };
 </script>
 <style>
