@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <el-container>
-      <el-header>
+      <el-header v-show="!$route.meta.doNotShowFrame">
         <!-- header begin -->
         <el-row>
           <el-col :xs="8" :sm="11" :md="14" :lg="17" :xl="19">
@@ -16,22 +16,24 @@
             >
               <el-submenu index="1">
                 <template slot="title">我的基金</template>
-                <el-menu-item index="PosInfo" v-on:click="changeMainComponent">持仓信息</el-menu-item>
-                <el-menu-item index="IncomeBreakdown" v-on:click="changeMainComponent">收益明细</el-menu-item>
-                <el-menu-item index="TransactionRecord" v-on:click="changeMainComponent">交易记录</el-menu-item>
+                <el-menu-item index="PosInfo">持仓信息</el-menu-item>
+                <el-menu-item index="IncomeBreakdown">收益明细</el-menu-item>
+                <el-menu-item index="TransactionRecord">交易记录</el-menu-item>
               </el-submenu>
               <el-submenu index="2">
                 <template slot="title">基金市场</template>
-                <el-menu-item index="LatestFund" v-on:click="changeMainComponent">新发基金</el-menu-item>
+                <el-menu-item index="LatestFund">新发基金</el-menu-item>
                 <el-submenu index="2-2">
                   <template slot="title">基金排行</template>
-                  <el-menu-item index="PerformanceRanking" v-on:click="changeMainComponent">业绩排行</el-menu-item>
-                  <el-menu-item index="ValuationRanking" v-on:click="changeMainComponent">估值排行</el-menu-item>
+                  <el-menu-item index="PerformanceRanking"
+                    >业绩排行</el-menu-item
+                  >
+                  <el-menu-item index="ValuationRanking">估值排行</el-menu-item>
                 </el-submenu>
                 <el-submenu index="2-3">
                   <template slot="title">基金推荐</template>
-                  <el-menu-item index="DebateFund" v-on:click="changeMainComponent">稳健债基</el-menu-item>
-                  <el-menu-item index="StockFund" v-on:click="changeMainComponent">股票基金</el-menu-item>
+                  <el-menu-item index="DebateFund">稳健债基</el-menu-item>
+                  <el-menu-item index="StockFund">股票基金</el-menu-item>
                 </el-submenu>
               </el-submenu>
               <el-menu-item index="MyFund">自选基金</el-menu-item>
@@ -46,7 +48,14 @@
               v-model="inputSearchFund"
             ></el-input>
           </el-col>
-          <el-col id="personalInfoPanel" :xs="8" :sm="6" :md="4" :lg="3" :xl="2">
+          <el-col
+            id="personalInfoPanel"
+            :xs="8"
+            :sm="6"
+            :md="4"
+            :lg="3"
+            :xl="2"
+          >
             <el-avatar
               size="large"
               id="mainAvatar"
@@ -54,15 +63,23 @@
             ></el-avatar>
             <el-dropdown trigger="click" id="headerUserName">
               <span class="el-dropdown-link">
-                <span class="need-to-be-ellipsis" style="color:#409eff">张开楠Kano2333</span>
+                <span class="need-to-be-ellipsis" style="color: #409eff"
+                  >张开楠Kano2333</span
+                >
                 <span class="need-to-be-ellipsis">
                   <i class="el-icon-arrow-down el-icon--right"></i>
                 </span>
               </span>
               <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item icon="el-icon-user">个人主页</el-dropdown-item>
-                <el-dropdown-item icon="el-icon-s-tools">安全设置</el-dropdown-item>
-                <el-dropdown-item icon="el-icon-setting">信息设置</el-dropdown-item>
+                <el-dropdown-item icon="el-icon-user"
+                  >个人主页</el-dropdown-item
+                >
+                <el-dropdown-item icon="el-icon-s-tools"
+                  >安全设置</el-dropdown-item
+                >
+                <el-dropdown-item icon="el-icon-setting"
+                  >信息设置</el-dropdown-item
+                >
                 <el-dropdown-item icon="el-icon-back">登出</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -71,42 +88,28 @@
         <!-- header end -->
       </el-header>
       <el-main>
-        <keep-alive>
+        <!-- <keep-alive>
           <component v-bind:is="MainComponent"></component>
-        </keep-alive>
-        <router-link to="/login">登录</router-link>
-      <router-view/>
+        </keep-alive> -->
+        <!-- <router-link to="/login">登录</router-link> -->
+        <router-view />
       </el-main>
     </el-container>
-    
   </div>
-  
 </template>
 
 <script>
 export default {
   name: "App",
-  components: {
-    PosInfo: () => import("./components/PosInfo.vue"),
-    IncomeBreakdown: () => import("./components/IncomeBreakdown.vue"),
-    TransactionRecord: () => import("./components/TransactionRecord.vue"),
-    LatestFund: () => import("./components/LatestFund.vue"),
-    PerformanceRanking: () => import("./components/PerformanceRanking.vue"),
-    ValuationRanking: () => import("./components/ValuationRanking.vue"),
-    DebateFund: () => import("./components/DebateFund.vue"),
-    StockFund: () => import("./components/StockFund.vue"),
-    MyFund: () => import("./components/MyFund.vue"),
-    Login: () => import("./components/Login.vue")
-  },
   data() {
     return {
       inputSearchFund: "",
-      MainComponent: "MyFund",
     };
   },
   methods: {
     changeMainComponent: function (index) {
-      this.MainComponent = index;
+      console.log(index);
+      window.location = "#/" + index;
     },
   },
 };
