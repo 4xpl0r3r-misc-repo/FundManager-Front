@@ -4,12 +4,9 @@ import Router from 'vue-router'
 import Login from './components/Login'
 import PosInfo from './components/PosInfo'
 import TransactionRecord from './components/TransactionRecord'
-import LatestFund from './components/LatestFund'
-import PerformanceRanking from './components/PerformanceRanking'
-import ValuationRanking from './components/ValuationRanking'
-import DebateFund from './components/DebateFund'
-import StockFund from './components/StockFund'
 import MyFund from './components/MyFund'
+import Register from './components/Register'
+import FundMarket from './components/FundMarket'
 
 Vue.use(Router)
 
@@ -19,6 +16,14 @@ export default new Router({
       path: '/Login',
       name: 'Login',
       component: Login,
+      meta: {
+        doNotShowFrame: true
+      }
+    },
+    {
+      path: '/Register',
+      name: 'Register',
+      component: Register,
       meta: {
         doNotShowFrame: true
       }
@@ -36,27 +41,42 @@ export default new Router({
     {
       path: '/LatestFund',
       name: 'LatestFund',
-      component: LatestFund,
+      component: FundMarket,
+      meta: {
+        sorterOrFilter: 'LatestFund'
+      }
     },
     {
       path: '/PerformanceRanking',
       name: 'PerformanceRanking',
-      component: PerformanceRanking,
+      component: FundMarket,
+      meta: {
+        sorterOrFilter: 'PerformanceRanking'
+      }
     },
     {
       path: '/ValuationRanking',
       name: 'ValuationRanking',
-      component: ValuationRanking,
+      component: FundMarket,
+      meta: {
+        sorterOrFilter: 'ValuationRanking'
+      }
     },
     {
       path: '/DebateFund',
       name: 'DebateFund',
-      component: DebateFund,
+      component: FundMarket,
+      meta: {
+        sorterOrFilter: 'DebateFund'
+      }
     },
     {
       path: '/StockFund',
       name: 'StockFund',
-      component: StockFund,
+      component: FundMarket,
+      meta: {
+        sorterOrFilter: 'non-DebateFund'
+      }
     },
     {
       path: '/MyFund',

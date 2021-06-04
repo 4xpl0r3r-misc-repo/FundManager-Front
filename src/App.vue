@@ -6,7 +6,7 @@
         <el-row>
           <el-col :xs="8" :sm="11" :md="14" :lg="17" :xl="19">
             <el-menu
-              :default-active="'MyFund'"
+              :default-active="$route.name"
               class="el-menu-demo"
               mode="horizontal"
               @select="changeMainComponent"
@@ -33,7 +33,7 @@
                 <el-submenu index="2-3">
                   <template slot="title">基金推荐</template>
                   <el-menu-item index="DebateFund">稳健债基</el-menu-item>
-                  <el-menu-item index="StockFund">股票基金</el-menu-item>
+                  <el-menu-item index="StockFund">非债券基金</el-menu-item>
                 </el-submenu>
               </el-submenu>
               <el-menu-item index="MyFund">自选基金</el-menu-item>
@@ -61,11 +61,16 @@
               id="mainAvatar"
               src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
             ></el-avatar>
-            <el-dropdown trigger="click" id="headerUserName">
+
+            <el-dropdown
+              trigger="click"
+              id="headerUserName"
+              @command="userOptions"
+            >
               <span class="el-dropdown-link">
-                <span class="need-to-be-ellipsis" style="color: #409eff"
-                  >张开楠Kano2333</span
-                >
+                <span class="need-to-be-ellipsis" style="color: #409eff">{{
+                  selfInfo.name
+                }}</span>
                 <span class="need-to-be-ellipsis">
                   <i class="el-icon-arrow-down el-icon--right"></i>
                 </span>
@@ -80,7 +85,9 @@
                 <el-dropdown-item icon="el-icon-setting"
                   >信息设置</el-dropdown-item
                 >
-                <el-dropdown-item icon="el-icon-back">登出</el-dropdown-item>
+                <el-dropdown-item icon="el-icon-back" command="logout"
+                  >登出</el-dropdown-item
+                >
               </el-dropdown-menu>
             </el-dropdown>
           </el-col>
@@ -104,13 +111,60 @@ export default {
   data() {
     return {
       inputSearchFund: "",
+      selfInfo: {
+        name: "",
+        balance: 0,
+        id: 0,
+        email: "",
+        password: "",
+        registeredAt: "",
+      },
     };
   },
+  computed: {},
   methods: {
     changeMainComponent: function (index) {
-      console.log(index);
-      window.location = "#/" + index;
+      this.$router.push("/" + index);
     },
+    checkAndUpdateLogonStatus: function () {
+      this.$http
+        .get("/user/getSelfInfo")
+        .then((res) => {
+          if (res.data.success) {
+            this.selfInfo = res.data.success;
+          } else {
+            console.log("未登录，重定向到登录页面");
+            this.$router.push("/Login");
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          this.$router.push("/Login");
+        });
+    },
+    userOptions: function (command) {
+      switch (command) {
+        case "logout":
+          this.$http.get("/user/logout");
+          this.$router.push("/Login");
+          break;
+
+        default:
+          break;
+      }
+    },
+  },
+  watch: {
+    $route() {
+      if (!["Login", "Register"].includes(this.$route.name)) {
+        this.checkAndUpdateLogonStatus();
+      }
+    },
+  },
+  mounted() {
+    if (!["Login", "Register"].includes(this.$route.name)) {
+      this.checkAndUpdateLogonStatus();
+    }
   },
 };
 </script>
@@ -129,12 +183,11 @@ export default {
   line-height: 60px;
 }
 
-.el-main {
+/* .el-main {
   background-color: #e9eef3;
   color: #333;
   text-align: center;
-  line-height: 160px;
-}
+} */
 
 body > .el-container {
   margin-bottom: 40px;
