@@ -4,7 +4,6 @@ import Router from 'vue-router'
 import Login from './components/Login'
 import PosInfo from './components/PosInfo'
 import TransactionRecord from './components/TransactionRecord'
-import MyFund from './components/MyFund'
 import Register from './components/Register'
 import FundMarket from './components/FundMarket'
 
@@ -81,7 +80,10 @@ export default new Router({
     {
       path: '/MyFund',
       name: 'MyFund',
-      component: MyFund,
+      component: FundMarket,
+      meta: {
+        sorterOrFilter: 'MyFund'
+      }
     }
   ]
 })

@@ -39,8 +39,36 @@
       </el-table-column>
       <el-table-column prop="investmentObjectives" label="投资目标">
       </el-table-column>
-      <el-table-column fixed="right" label="操作" width="80">
-        <template slot-scope="scope">
+      <el-table-column
+        fixed="right"
+        label="关注"
+        width="60"
+        align="center"
+        header-align="center"
+      >
+        <template #default="scope">
+          <el-button @click="toggleFavorite(scope)" type="text" size="medium"
+            ><i
+              class="el-icon-star-on"
+              style="font-size: 20px; color: orange"
+              v-if="scope.row.isFavorite == true"
+            ></i
+            ><i
+              class="el-icon-star-off"
+              style="font-size: 20px; color: orange"
+              v-if="scope.row.isFavorite != true"
+            ></i
+          ></el-button>
+        </template>
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        width="80"
+        align="center"
+        header-align="center"
+      >
+        <template #default="scope">
           <el-button @click="openDrawer(scope.row)" type="text" size="small"
             >查看详情</el-button
           >
@@ -99,6 +127,59 @@ export default {
     };
   },
   methods: {
+    toggleFavorite(scope) {
+      if (scope.row.isFavorite) {
+        this.$http
+          .post(
+            "/favorite/removeFavorite",
+            {
+              fid: scope.row.id,
+            },
+            { withCredentials: true }
+          )
+          .then((res) => {
+            if (res.data.success) {
+              let tmp = this.tableData[scope.$index];
+              tmp.isFavorite = !tmp.isFavorite;
+              this.$set(this.tableData, scope.$index, tmp);
+              this.$notify({
+                title: "操作成功",
+                message: "已移除关注",
+                type: "success",
+              });
+            }
+          })
+          .catch((error) => {
+            this.$message.error("网络异常错误！");
+            console.log(error);
+          });
+      } else {
+        this.$http
+          .post(
+            "/favorite/addFavorite",
+            {
+              fid: scope.row.id,
+            },
+            { withCredentials: true }
+          )
+          .then((res) => {
+            if (res.data.success) {
+              let tmp = this.tableData[scope.$index];
+              tmp.isFavorite = !tmp.isFavorite;
+              this.$set(this.tableData, scope.$index, tmp);
+              this.$notify({
+                title: "操作成功",
+                message: "已添加关注",
+                type: "success",
+              });
+            }
+          })
+          .catch((error) => {
+            this.$message.error("网络异常错误！");
+            console.log(error);
+          });
+      }
+    },
     openDrawer(row) {
       this.title = row.name;
       this.drawer = true;
@@ -211,43 +292,106 @@ export default {
             res.data.success.forEach((row) => {
               row.releaseDate = new Date(row.releaseDate);
             });
-            this.tableData = res.data.success;
+            // this.tableData = res.data.success;
             switch (this.$route.meta.sorterOrFilter) {
               case "LatestFund":
-                this.tableData.sort(function (a, b) {
+                res.data.success.sort(function (a, b) {
                   return b.releaseDate - a.releaseDate;
                 });
+                this.tableData = res.data.success;
                 break;
               case "PerformanceRanking":
-                this.tableData.sort(function (a, b) {
+                res.data.success.sort(function (a, b) {
                   let timebetween = new Date() - a.releaseDate;
                   a = a.currentPrice / timebetween;
                   timebetween = new Date() - b.releaseDate;
                   b = b.currentPrice / timebetween;
                   return b - a;
                 });
+                this.tableData = res.data.success;
                 break;
 
               case "ValuationRanking":
-                this.tableData.sort(function (a, b) {
+                res.data.success.sort(function (a, b) {
                   return b.currentPrice - a.currentPrice;
                 });
+                this.tableData = res.data.success;
                 break;
               case "DebateFund":
-                this.tableData = this.tableData.filter(
+                this.tableData = res.data.success.filter(
                   (fundItem) => fundItem.type.indexOf("债券") != -1
                 );
                 break;
               case "non-DebateFund":
-                this.tableData = this.tableData.filter(
+                this.tableData = res.data.success.filter(
                   (fundItem) => fundItem.type.indexOf("债券") == -1
                 );
+                break;
+              case "MyFund":
+                this.$http
+                  .get("/favorite/getSelfFavorite")
+                  .then((res2) => {
+                    if (res2.data.success) {
+                      this.tableData = res.data.success.filter((fundItem) => {
+                        for (
+                          let index = 0;
+                          index < res2.data.success.length;
+                          index++
+                        ) {
+                          const record = res2.data.success[index];
+                          if (record.fid == fundItem.id) {
+                            return true;
+                          }
+                        }
+                        return false;
+                      });
+                      for (
+                        let index = 0;
+                        index < this.tableData.length;
+                        index++
+                      ) {
+                        this.tableData[index].isFavorite = true;
+                      }
+                      this.loading = false;
+                    }
+                  })
+                  .catch((error) => {
+                    this.$message.error("获取数据失败，异常错误！");
+                    console.log(error);
+                  });
                 break;
 
               default:
                 break;
             }
-            this.loading = false;
+            //处理非MyFund页面（同步）
+            if (this.$route.meta.sorterOrFilter != "MyFund") {
+              this.$http
+                .get("/favorite/getSelfFavorite")
+                .then((res) => {
+                  if (res.data.success) {
+                    for (
+                      let index = 0;
+                      index < this.tableData.length;
+                      index++
+                    ) {
+                      let flag = false;
+                      res.data.success.forEach((element) => {
+                        if (this.tableData[index].id == element.fid) {
+                          flag = true;
+                        }
+                      });
+                      this.tableData[index].isFavorite = flag;
+                      this.$set(this.tableData, 0, this.tableData[0]); //刷新
+                    }
+                  }
+                })
+                .catch((error) => {
+                  this.$message.error("获取数据失败，异常错误！");
+                  console.log(error);
+                });
+              this.loading = false;
+            }
           } else {
             this.$message.error("获取数据失败!");
             console.log(res.data.error);

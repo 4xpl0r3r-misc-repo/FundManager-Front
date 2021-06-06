@@ -156,12 +156,18 @@ export default {
   },
   watch: {
     $route() {
+      if (this.$route.path == "/") {
+        this.$router.push("/MyFund");
+      }
       if (!["Login", "Register"].includes(this.$route.name)) {
         this.checkAndUpdateLogonStatus();
       }
     },
   },
   mounted() {
+    if (this.$route.path == "/") {
+      this.$router.push("/MyFund");
+    }
     if (!["Login", "Register"].includes(this.$route.name)) {
       this.checkAndUpdateLogonStatus();
     }
