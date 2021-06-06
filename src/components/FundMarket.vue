@@ -17,27 +17,77 @@
       </el-table-column>
       <el-table-column prop="name" label="基金名称" width="180">
       </el-table-column>
-      <el-table-column prop="type" label="基金类型" width="120">
+      <el-table-column
+        prop="type"
+        label="基金类型"
+        width="120"
+        v-if="$route.meta.sorterOrFilter != 'PosInfo'"
+      >
       </el-table-column>
-      <el-table-column prop="managerName" label="基金经理" width="120">
+      <el-table-column
+        prop="managerName"
+        label="基金经理"
+        width="120"
+        v-if="$route.meta.sorterOrFilter != 'PosInfo'"
+      >
       </el-table-column>
+
       <el-table-column
         prop="releaseDate"
         label="发行日期"
         width="120"
         :formatter="dateFormatter"
+        v-if="$route.meta.sorterOrFilter != 'PosInfo'"
       >
       </el-table-column>
       <el-table-column prop="currentPrice" label="当前净值" width="120">
+      </el-table-column>
+      <el-table-column
+        prop="amount"
+        label="仓位"
+        width="120"
+        v-if="$route.meta.sorterOrFilter == 'PosInfo'"
+        :formatter="amountFormatter"
+      >
+      </el-table-column>
+      <el-table-column
+        label="持仓估值"
+        width="120"
+        :formatter="positionValueFormatter"
+        v-if="$route.meta.sorterOrFilter == 'PosInfo'"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="haveCost"
+        label="已盈利/花费(-)"
+        width="120"
+        v-if="$route.meta.sorterOrFilter == 'PosInfo'"
+        :formatter="haveCostFormatter"
+      >
+      </el-table-column>
+
+      <el-table-column
+        label="盈亏估算"
+        width="120"
+        :formatter="sumValueFormatter"
+        v-if="$route.meta.sorterOrFilter == 'PosInfo'"
+      >
+      </el-table-column>
+      <el-table-column label="" v-if="$route.meta.sorterOrFilter == 'PosInfo'">
       </el-table-column>
       <el-table-column
         prop="currentPrice"
         label="平均年回报率"
         width="120"
         :formatter="returnRateFormatter"
+        v-if="$route.meta.sorterOrFilter != 'PosInfo'"
       >
       </el-table-column>
-      <el-table-column prop="investmentObjectives" label="投资目标">
+      <el-table-column
+        prop="investmentObjectives"
+        label="投资目标"
+        v-if="$route.meta.sorterOrFilter != 'PosInfo'"
+      >
       </el-table-column>
       <el-table-column
         fixed="right"
@@ -81,7 +131,7 @@
       :visible.sync="drawer"
       :direction="direction"
       :before-close="handleClose"
-      size="50%"
+      size="700px"
     >
       <el-collapse v-model="activeNames">
         <el-collapse-item title="基本信息" name="1">
@@ -89,6 +139,11 @@
             :data="basicData"
             node-key="id"
             :default-expanded-keys="[1, 2, 3, 4, 5, 6, 7, 8]"
+            style="
+              -moz-column-count: 2;
+              -webkit-column-count: 2;
+              column-count: 2;
+            "
           ></el-tree>
         </el-collapse-item>
         <el-collapse-item title="投资目标" name="2">
@@ -106,6 +161,28 @@
             {{ activeData.investmentStrategy }}
           </div>
         </el-collapse-item>
+        <el-collapse-item title="操作" name="5" style="text-align: center">
+          <div style="margin: 0 auto">
+            <el-input
+              placeholder="交易金额"
+              v-model="transactionAmount"
+              style="width: 200px; margin: 20px 0"
+              clearable
+            >
+            </el-input>
+            <br />
+            <el-button-group>
+              <el-button type="primary" @click="changePosition(0)" round
+                ><i class="el-icon-download"></i>买入</el-button
+              >
+              <el-button type="warning" @click="changePosition(1)" round
+                ><i class="el-icon-upload2"></i>卖出</el-button
+              >
+            </el-button-group>
+            <br />
+            相当于约 {{ tradeShare.toFixed(2) }} 份额
+          </div>
+        </el-collapse-item>
       </el-collapse>
     </el-drawer>
   </div>
@@ -121,12 +198,57 @@ export default {
       direction: "rtl",
       tableData: [],
       drawer: false,
-      activeNames: ["2", "3"],
+      activeNames: ["1", "2", "3", "5"],
       basicData: {},
       activeData: {},
+      transactionAmount: "",
     };
   },
+  computed: {
+    tradeShare: function () {
+      if (this.tableData == [] || !this.activeData) {
+        return 0;
+      }
+      return this.transactionAmount / this.activeData.currentPrice;
+    },
+  },
   methods: {
+    changePosition(type) {
+      let realTransactionAmount = 0;
+      if (type == 0) {
+        realTransactionAmount = Number(this.transactionAmount);
+      } else if (type == 1) {
+        realTransactionAmount = -Number(this.transactionAmount);
+      } else {
+        console.log("交易类型不合法");
+        return;
+      }
+      this.$http
+        .post("/position/changePosition", {
+          fid: this.activeData.id,
+          amount: realTransactionAmount / this.activeData.currentPrice,
+        })
+        .then((res) => {
+          if (res.data.success) {
+            this.$notify({
+              title: "操作成功",
+              message: "已成功交易基金",
+              type: "success",
+            });
+          } else if (res.data.error) {
+            this.$notify.error({
+              title: "操作失败",
+              message: "未能成功交易基金，原因: " + res.data.error,
+            });
+          } else {
+            throw "";
+          }
+        })
+        .catch((error) => {
+          this.$message.error("网络异常错误！");
+          console.log(error);
+        });
+    },
     toggleFavorite(scope) {
       if (scope.row.isFavorite) {
         this.$http
@@ -267,6 +389,18 @@ export default {
         })
         .catch(() => {});
     },
+    positionValueFormatter(row) {
+      return (row.amount * row.currentPrice).toFixed(2) + "元";
+    },
+    sumValueFormatter(row) {
+      return (row.amount * row.currentPrice + row.haveCost).toFixed(2) + "元";
+    },
+    amountFormatter(row, column, cellValue) {
+      return cellValue.toFixed(4);
+    },
+    haveCostFormatter(row, column, cellValue) {
+      return cellValue.toFixed(2) + "元";
+    },
     idFormatter(row, column, cellValue) {
       let res = cellValue.toString();
       let len = res.length;
@@ -280,7 +414,9 @@ export default {
     },
     returnRateFormatter(row) {
       let timebetween = (new Date() - row.releaseDate) / 60 / 60 / 24 / 1000;
-      return ((row.currentPrice / timebetween) * 365 * 100).toFixed(3) + " %";
+      return (
+        (((row.currentPrice - 1) / timebetween) * 365 * 100).toFixed(2) + " %"
+      );
     },
     updateFundData() {
       this.loading = true;
@@ -292,8 +428,40 @@ export default {
             res.data.success.forEach((row) => {
               row.releaseDate = new Date(row.releaseDate);
             });
-            // this.tableData = res.data.success;
             switch (this.$route.meta.sorterOrFilter) {
+              case "PosInfo":
+                this.$http
+                  .get("/position/getSelfPosition")
+                  .then((res1) => {
+                    if (res1.data.success) {
+                      let newFundData = [];
+                      res.data.success.forEach((fundItem) => {
+                        res1.data.success.forEach((posItem) => {
+                          if (posItem.fid == fundItem.id) {
+                            newFundData.push({
+                              id: fundItem.id,
+                              name: fundItem.name,
+                              currentPrice: fundItem.currentPrice,
+                              amount: posItem.count,
+                              haveCost: -posItem.haveCost,
+                            });
+                          }
+                        });
+                      });
+                      this.tableData = newFundData.sort(function (a, b) {
+                        return (
+                          b.currentPrice * b.amount - a.currentPrice * a.amount
+                        );
+                      });
+                    } else {
+                      throw res.data.error;
+                    }
+                  })
+                  .catch((error) => {
+                    this.$message.error("获取数据失败，异常错误！");
+                    console.log(error);
+                  });
+                break;
               case "LatestFund":
                 res.data.success.sort(function (a, b) {
                   return b.releaseDate - a.releaseDate;
@@ -303,9 +471,9 @@ export default {
               case "PerformanceRanking":
                 res.data.success.sort(function (a, b) {
                   let timebetween = new Date() - a.releaseDate;
-                  a = a.currentPrice / timebetween;
+                  a = (a.currentPrice - 1) / timebetween;
                   timebetween = new Date() - b.releaseDate;
-                  b = b.currentPrice / timebetween;
+                  b = (b.currentPrice - 1) / timebetween;
                   return b - a;
                 });
                 this.tableData = res.data.success;
@@ -417,5 +585,6 @@ export default {
 <style>
 .el-drawer__body {
   padding: 0 20px;
+  overflow-y: auto;
 }
 </style>

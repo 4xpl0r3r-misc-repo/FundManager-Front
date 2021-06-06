@@ -2,10 +2,10 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 import Login from './components/Login'
-import PosInfo from './components/PosInfo'
 import TransactionRecord from './components/TransactionRecord'
 import Register from './components/Register'
 import FundMarket from './components/FundMarket'
+import SelfInfo from './components/SelfInfo'
 
 Vue.use(Router)
 
@@ -30,7 +30,10 @@ export default new Router({
     {
       path: '/PosInfo',
       name: 'PosInfo',
-      component: PosInfo,
+      component: FundMarket,
+      meta: {
+        sorterOrFilter: 'PosInfo'
+      }
     },
     {
       path: '/TransactionRecord',
@@ -84,6 +87,10 @@ export default new Router({
       meta: {
         sorterOrFilter: 'MyFund'
       }
+    }, {
+      path: '/SelfInfo',
+      name: 'SelfInfo',
+      component: SelfInfo,
     }
   ]
 })

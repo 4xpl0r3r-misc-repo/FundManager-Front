@@ -46,6 +46,7 @@
               prefix-icon="el-icon-search"
               clearable
               v-model="inputSearchFund"
+              style="width: 200px"
             ></el-input>
           </el-col>
           <el-col
@@ -76,7 +77,7 @@
                 </span>
               </span>
               <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item icon="el-icon-user"
+                <el-dropdown-item icon="el-icon-user" command="goToSelfInfo"
                   >个人主页</el-dropdown-item
                 >
                 <el-dropdown-item icon="el-icon-s-tools"
@@ -95,11 +96,10 @@
         <!-- header end -->
       </el-header>
       <el-main>
-        <!-- <keep-alive>
-          <component v-bind:is="MainComponent"></component>
-        </keep-alive> -->
-        <!-- <router-link to="/login">登录</router-link> -->
-        <router-view />
+        <router-view
+          @update-status="checkAndUpdateLogonStatus"
+          :self-info="selfInfo"
+        />
       </el-main>
     </el-container>
   </div>
@@ -148,7 +148,9 @@ export default {
           this.$http.get("/user/logout");
           this.$router.push("/Login");
           break;
-
+        case "goToSelfInfo":
+          this.$router.push("/SelfInfo");
+          break;
         default:
           break;
       }
