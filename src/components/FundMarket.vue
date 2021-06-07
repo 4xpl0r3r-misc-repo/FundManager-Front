@@ -1,5 +1,17 @@
 <template>
   <div>
+    <el-card
+      style="float: left; display: inline-block; margin: 0 10px; font-size: 2em"
+      v-if="$route.meta.sorterOrFilter == 'PosInfo'"
+    >
+      <div>总已变现/投入: {{ sumHaveCost.toFixed(2) }} 元</div>
+    </el-card>
+    <el-card
+      style="float: left; display: inline-block; margin: 0 10px; font-size: 2em"
+      v-if="$route.meta.sorterOrFilter == 'PosInfo'"
+    >
+      <div>总盈亏估算: {{ sumValue.toFixed(2) }} 元</div>
+    </el-card>
     <el-table
       :data="tableData"
       stripe
@@ -59,7 +71,7 @@
       </el-table-column>
       <el-table-column
         prop="haveCost"
-        label="已盈利/花费(-)"
+        label="已变现/投入"
         width="120"
         v-if="$route.meta.sorterOrFilter == 'PosInfo'"
         :formatter="haveCostFormatter"
@@ -202,6 +214,8 @@ export default {
       basicData: {},
       activeData: {},
       transactionAmount: "",
+      sumHaveCost: 0,
+      sumValue: 0,
     };
   },
   computed: {
@@ -435,9 +449,15 @@ export default {
                   .then((res1) => {
                     if (res1.data.success) {
                       let newFundData = [];
+                      let tSumHaveCost = 0;
+                      let tSumValue = 0;
                       res.data.success.forEach((fundItem) => {
                         res1.data.success.forEach((posItem) => {
                           if (posItem.fid == fundItem.id) {
+                            tSumHaveCost += -posItem.haveCost;
+                            tSumValue +=
+                              fundItem.currentPrice * posItem.count -
+                              posItem.haveCost;
                             newFundData.push({
                               id: fundItem.id,
                               name: fundItem.name,
@@ -448,6 +468,8 @@ export default {
                           }
                         });
                       });
+                      this.sumValue = tSumValue;
+                      this.sumHaveCost = tSumHaveCost;
                       this.tableData = newFundData.sort(function (a, b) {
                         return (
                           b.currentPrice * b.amount - a.currentPrice * a.amount

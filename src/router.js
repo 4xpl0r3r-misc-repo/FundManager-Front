@@ -87,7 +87,8 @@ export default new Router({
       meta: {
         sorterOrFilter: 'MyFund'
       }
-    }, {
+    },
+    {
       path: '/SelfInfo',
       name: 'SelfInfo',
       component: SelfInfo,

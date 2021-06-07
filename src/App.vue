@@ -17,7 +17,6 @@
               <el-submenu index="1">
                 <template slot="title">我的基金</template>
                 <el-menu-item index="PosInfo">持仓信息</el-menu-item>
-                <el-menu-item index="IncomeBreakdown">收益明细</el-menu-item>
                 <el-menu-item index="TransactionRecord">交易记录</el-menu-item>
               </el-submenu>
               <el-submenu index="2">
@@ -28,7 +27,7 @@
                   <el-menu-item index="PerformanceRanking"
                     >业绩排行</el-menu-item
                   >
-                  <el-menu-item index="ValuationRanking">估值排行</el-menu-item>
+                  <el-menu-item index="ValuationRanking">净值排行</el-menu-item>
                 </el-submenu>
                 <el-submenu index="2-3">
                   <template slot="title">基金推荐</template>
@@ -41,13 +40,21 @@
           </el-col>
 
           <el-col :xs="8" :sm="7" :md="6" :lg="4" :xl="3">
-            <el-input
-              placeholder="请输入想要搜索的基金"
-              prefix-icon="el-icon-search"
-              clearable
-              v-model="inputSearchFund"
-              style="width: 200px"
-            ></el-input>
+            <el-tooltip
+              class="item"
+              effect="dark"
+              content="可搜索代号、名称、全名、类型、经理"
+              placement="bottom"
+            >
+              <el-input
+                placeholder="请输入想要搜索的基金"
+                prefix-icon="el-icon-search"
+                clearable
+                v-model="inputSearchFund"
+                style="width: 200px"
+                @input="search"
+              ></el-input>
+            </el-tooltip>
           </el-col>
           <el-col
             id="personalInfoPanel"
@@ -80,10 +87,12 @@
                 <el-dropdown-item icon="el-icon-user" command="goToSelfInfo"
                   >个人主页</el-dropdown-item
                 >
-                <el-dropdown-item icon="el-icon-s-tools"
+                <el-dropdown-item
+                  icon="el-icon-s-tools"
+                  command="securitySetting"
                   >安全设置</el-dropdown-item
                 >
-                <el-dropdown-item icon="el-icon-setting"
+                <el-dropdown-item icon="el-icon-setting" command="infoSetting"
                   >信息设置</el-dropdown-item
                 >
                 <el-dropdown-item icon="el-icon-back" command="logout"
@@ -99,9 +108,40 @@
         <router-view
           @update-status="checkAndUpdateLogonStatus"
           :self-info="selfInfo"
+          ref="interacteCom"
         />
       </el-main>
     </el-container>
+    <el-dialog
+      title="安全设置"
+      :visible.sync="securitySetting"
+      width="500px"
+      :before-close="handleClose"
+    >
+      <el-input
+        placeholder="请输入新密码"
+        v-model="newPasword"
+        show-password
+      ></el-input>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="securitySetting = false">取 消</el-button>
+        <el-button type="primary" @click="securitySettingCheck"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="信息设置"
+      :visible.sync="infoSetting"
+      width="500px"
+      :before-close="handleClose"
+    >
+      <el-input placeholder="请输入新用户名" v-model="newUsername"></el-input>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="infoSetting = false">取 消</el-button>
+        <el-button type="primary" @click="infoSettingCheck">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -110,7 +150,13 @@ export default {
   name: "App",
   data() {
     return {
+      newUsername: "",
+      newPasword: "",
+      securitySetting: false,
+      infoSetting: false,
       inputSearchFund: "",
+      backUpFlag: "",
+      dataBackUp: undefined,
       selfInfo: {
         name: "",
         balance: 0,
@@ -123,6 +169,79 @@ export default {
   },
   computed: {},
   methods: {
+    infoSettingCheck() {
+      this.$http
+        .post("/user/update/name", {
+          name: this.newUsername,
+        })
+        .then((res) => {
+          if (res.data.success) {
+            this.$notify({
+              title: "操作成功",
+              message: "用户名更新成功",
+              type: "success",
+            });
+            this.checkAndUpdateLogonStatus();
+          } else {
+            throw res.data.error;
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          this.$message.error("用户名更新失败，异常错误！");
+        });
+      this.infoSetting = false;
+    },
+    securitySettingCheck() {
+      this.securitySetting = false;
+      this.infoSetting = false;
+      this.$http
+        .post("/user/update/password", {
+          password: this.newPasword,
+        })
+        .then((res) => {
+          if (res.data.success) {
+            this.$notify({
+              title: "操作成功",
+              message: "密码更新成功，请重新登录",
+              type: "success",
+            });
+            Object.assign(this.$data, this.$options.data());
+            this.$router.push("/Login");
+          } else {
+            throw res.data.error;
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          this.$message.error("密码更新失败，异常错误！");
+        });
+    },
+    search(searchStr) {
+      if (this.backUpFlag != this.$route.name) {
+        this.backUpFlag = this.$route.name;
+        this.dataBackUp = this.$refs.interacteCom.tableData;
+      }
+      if (searchStr) {
+        this.$refs.interacteCom.loading = true;
+        let tmp = [];
+        this.dataBackUp.forEach((item) => {
+          if (
+            item.id == searchStr ||
+            item.name.indexOf(searchStr) != -1 ||
+            (item.fullName && item.fullName.indexOf(searchStr) != -1) ||
+            (item.type && item.type.indexOf(searchStr) != -1) ||
+            (item.managerName && item.managerName.indexOf(searchStr) != -1)
+          ) {
+            tmp.push(item);
+          }
+        });
+        this.$refs.interacteCom.tableData = tmp;
+        this.$refs.interacteCom.loading = false;
+      } else {
+        this.$refs.interacteCom.tableData = this.dataBackUp;
+      }
+    },
     changeMainComponent: function (index) {
       this.$router.push("/" + index);
     },
@@ -134,11 +253,13 @@ export default {
             this.selfInfo = res.data.success;
           } else {
             console.log("未登录，重定向到登录页面");
+            Object.assign(this.$data, this.$options.data());
             this.$router.push("/Login");
           }
         })
         .catch((error) => {
           console.log(error);
+          Object.assign(this.$data, this.$options.data());
           this.$router.push("/Login");
         });
     },
@@ -146,14 +267,26 @@ export default {
       switch (command) {
         case "logout":
           this.$http.get("/user/logout");
+          Object.assign(this.$data, this.$options.data());
           this.$router.push("/Login");
           break;
         case "goToSelfInfo":
           this.$router.push("/SelfInfo");
           break;
+        case "securitySetting":
+          this.securitySetting = true;
+          break;
+        case "infoSetting":
+          this.infoSetting = true;
+          break;
         default:
           break;
       }
+    },
+    handleClose(done) {
+      this.$confirm("确认关闭？").then(function () {
+        done();
+      });
     },
   },
   watch: {
